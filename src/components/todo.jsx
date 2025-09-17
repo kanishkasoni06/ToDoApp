@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import "../ui/todo.css"
+import { Box, Tab, Tabs, TextField } from "@mui/material";
 
 const Todo = () => {
     const [task, setTask]=useState([]);
     const [todo, setTodo]=useState("");
-
     const [streak, setStreak]=useState({current:0, max:0, lastDate:null});
+    const [filter, setFilter]=useState("all");
+    const [filterDate, setFilterDate]=useState( new Date().toISOString().split("T")[0]);
+
 
     useEffect(()=>{
         const storedTask=JSON.parse(localStorage.getItem("todo")) ||[];
@@ -62,6 +65,16 @@ const Todo = () => {
         }
     };
 
+    const filteredTasks=[...task]
+    .filter((t)=>
+    {
+        if (filter==="completed") return t.completed;
+        if (filter==="active") return !t.completed;
+        if (filter === "date") return t.createdAt=== filterDate;
+      return true;
+        
+    }
+)
     const TotalTasks=task.length;
     const TasksCompleted=task.filter(t=>t.completed).length;
 
@@ -70,7 +83,7 @@ return (
     <h1>Todo List</h1>
      <div className="task-summary">
      <p>Current Streak:{streak.current} 🔥</p>
-    <p>Best Streak:{"0"|| streak.max} 🔥</p>
+    <p>Best Streak:{streak.max} 🔥</p>
     </div>
     <div className="task-summary">
      <p>Total Tasks:{TotalTasks}</p>
@@ -83,14 +96,44 @@ return (
         <button type="submit" className="todo-button"
         >Add</button>
     </form>
+    <Box 
+    className="tabs-container"
+     sx={{
+    display: "flex",
+    justifyContent: "center",
+    flexWrap: { xs: "wrap", sm: "nowrap" }, 
+    gap: { xs: 1, sm: 2 } ,
+    mt: 2,
+  }}
+    >
+    <Tabs value={filter} onChange={(e,newValue)=>setFilter(newValue)}  className="tabs"  variant="scrollable"
+    scrollButtons="auto">
+    <Tab label="All" value="all" />
+    <Tab label="Active" value="active"  />
+    <Tab label="Completed" value="completed"  />
+    <Tab label="By Date" value="date"  />
+        
+    </Tabs>
+    </Box>
+    {filter==="date" && (
+        <Box sx={{ marginTop:"10px" }}>
+        <TextField
+        type="date"
+        onChange={(e)=>setFilterDate(e.target.value)}
+        value={filterDate}
+        size="small"
+        />
+        </Box>
+    )
+        }
     <ul className="todo-list">
-        {task.map((t, index)=>(
+        {filteredTasks.map((t, index)=>(
             <li key={t.id} className="todo-item">
                 <input type="checkbox" checked={t.completed} onChange={()=>handleCompleted(index)}
                     
                 />
                 <p className={t.completed?"completed":""}>{t.text}</p>
-                <button onClick={()=>handleDelete(index)}>Delete</button>
+                <button className="todo-button" onClick={()=>handleDelete(index)}>Delete</button>
             </li>
         ))}
     </ul>  
@@ -99,3 +142,5 @@ return (
 }
 
 export default Todo
+
+
